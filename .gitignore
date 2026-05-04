@@ -10,6 +10,9 @@ __pycache__/
 # Variáveis de ambiente — NUNCA subir
 .env
 
+# Anotações pessoais — NUNCA subir
+MINHAS_CONTAS.md
+
 # Chaves VAPID — ficam nas variáveis do Railway
 private_key.pem
 public_key.pem

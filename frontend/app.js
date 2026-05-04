@@ -1394,15 +1394,32 @@ async function agendaPage() {
           href: `tel:${telNum}`,
           onclick: (e) => e.stopPropagation(),
         }, ["📞"]) : null,
-        telNum ? h("a", {
-          class: "consult-action-btn",
-          title: "WhatsApp",
-          "aria-label": `Enviar WhatsApp para ${c.paciente_nome || "paciente"}`,
-          href: `https://wa.me/55${telNum}`,
-          target: "_blank",
-          rel: "noopener",
-          onclick: (e) => e.stopPropagation(),
-        }, ["💬"]) : null,
+        telNum ? (() => {
+          const primeiroNome = (c.paciente_nome || "").split(" ")[0] || "paciente";
+          const dataConsulta = new Date(c.inicio).toLocaleDateString("pt-BR", {
+            weekday: "long", day: "2-digit", month: "long"
+          });
+          const horaConsulta = formatTime(c.inicio);
+          const clinica = state.me?.usuario?.nome_clinica || "Agenda Médica";
+          const medico  = state.me?.usuario?.nome ? `Dr(a). ${state.me.usuario.nome}` : clinica;
+          const msgWa = encodeURIComponent(
+            `Olá ${primeiroNome}! 😊\n\n` +
+            `Passando para lembrar que você tem uma consulta agendada:\n` +
+            `📅 *${dataConsulta}* às *${horaConsulta}*\n\n` +
+            `Qualquer dúvida, estamos à disposição.\n` +
+            `— ${medico}`
+          );
+          const waNum = telNum.startsWith("55") ? telNum : `55${telNum}`;
+          return h("a", {
+            class: "consult-action-btn",
+            title: "Enviar lembrete via WhatsApp",
+            "aria-label": `Enviar lembrete WhatsApp para ${c.paciente_nome || "paciente"}`,
+            href: `https://wa.me/${waNum}?text=${msgWa}`,
+            target: "_blank",
+            rel: "noopener",
+            onclick: (e) => e.stopPropagation(),
+          }, ["💬"]);
+        })() : null,
       ]);
 
       const card = h("div", { class: `consult-card consult-card-${c.status}` }, [

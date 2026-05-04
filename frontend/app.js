@@ -891,10 +891,21 @@ function renderFAB(active) {
     { key: "perfil",    icon: "⚙️",  label: "Perfil",   href: "#/perfil" },
   ];
 
+  // Página de detalhe do paciente: substitui um item por "← Voltar"
+  const isDetalhe = active === "paciente";
+  const items = isDetalhe
+    ? [
+        { key: "back",      icon: "←",  label: "Voltar",    href: "#/pacientes" },
+        { key: "agenda",    icon: "📅", label: "Agenda",    href: "#/agenda" },
+        { key: "pacientes", icon: "👥", label: "Pacientes", href: "#/pacientes" },
+        { key: "perfil",    icon: "⚙️",  label: "Perfil",   href: "#/perfil" },
+      ]
+    : NAV_ITEMS;
+
   const nav = h("nav", { id: "bottom-nav", class: "bottom-nav", "aria-label": "Navegação principal" },
-    NAV_ITEMS.map(({ key, icon, label, href }) =>
+    items.map(({ key, icon, label, href }) =>
       h("a", {
-        class: "bottom-nav-item" + (active === key ? " active" : ""),
+        class: "bottom-nav-item" + (active === key ? " active" : "") + (key === "back" ? " bottom-nav-back" : ""),
         href,
         "aria-label": label,
         "aria-current": active === key ? "page" : null,
@@ -1863,7 +1874,7 @@ async function pacientePage() {
     return;
   }
 
-  pageShell("pacientes", [h("div", { class: "card" }, ["Carregando..."])]);
+  pageShell("paciente", [h("div", { class: "card" }, ["Carregando..."])]);
 
   try {
     const hist = await api(`/patients/${id}/history`);
@@ -1946,11 +1957,11 @@ async function pacientePage() {
         ])
       : h("div", { class: "muted" }, ["Sem histórico de consultas ainda."]);
 
-    pageShell("pacientes", [
+    pageShell("paciente", [
       h("div", { class: "row", style: "margin-bottom:12px" }, [
         h("h2", { style: "margin:0; font-size:16px" }, ["Paciente"]),
         h("div", { class: "spacer" }),
-        h("a", { class: "btn", href: "#/pacientes" }, ["Voltar"]),
+        h("a", { class: "btn", href: "#/pacientes" }, ["← Voltar"]),
         // Botão PDF
         h("button", {
           class: "btn",
@@ -1980,8 +1991,13 @@ async function pacientePage() {
           onclick: () => {
             const tel = (p.telefone || "").replace(/\D/g, "");
             const telFull = tel.startsWith("55") ? tel : "55" + tel;
+            const clinica = state.me?.usuario?.nome_clinica || "Agenda Médica";
+            const medico  = state.me?.usuario?.nome ? `Dr(a). ${state.me.usuario.nome}` : clinica;
             const msg = encodeURIComponent(
-              `Olá, ${p.nome_completo.split(" ")[0]}! 👋\n\nEntramos em contato da ${CLINIC_NAME}.\n\nPrecisa de alguma informação ou deseja agendar uma consulta? Estamos à disposição! 😊`
+              `Olá, ${p.nome_completo.split(" ")[0]}! 👋\n\n` +
+              `Entramos em contato da *${clinica}*.\n\n` +
+              `Precisa de alguma informação ou deseja agendar uma consulta? Estamos à disposição! 😊\n\n` +
+              `— ${medico}`
             );
             window.open(`https://wa.me/${telFull}?text=${msg}`, "_blank");
           },
@@ -2032,7 +2048,11 @@ async function pacientesPage() {
         const telDigits = (p.telefone || "").replace(/\D/g, "");
         const waNum = telDigits.startsWith("55") ? telDigits : "55" + telDigits;
         const waMsg = encodeURIComponent(
-          `Olá, ${p.nome_completo.split(" ")[0]}! 👋\n\nEntramos em contato da ${CLINIC_NAME}.\n\nPrecisa de alguma informação ou deseja agendar uma consulta? Estamos à disposição! 😊`
+          (() => {
+            const clinica = state.me?.usuario?.nome_clinica || "Agenda Médica";
+            const medico  = state.me?.usuario?.nome ? `Dr(a). ${state.me.usuario.nome}` : clinica;
+            return `Olá, ${p.nome_completo.split(" ")[0]}! 👋\n\nEntramos em contato da *${clinica}*.\n\nPrecisa de alguma informação ou deseja agendar uma consulta? Estamos à disposição! 😊\n\n— ${medico}`;
+          })()
         );
 
         // ── Botões desktop (visíveis direto na linha) ──────────────────────

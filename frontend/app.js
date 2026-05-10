@@ -2056,9 +2056,8 @@ async function pacientesPage() {
         );
 
         // ── Botões desktop (visíveis direto na linha) ──────────────────────
-        // ── Botões de ação diretos ─────────────────────────────────────
+        // ── Só o botão WhatsApp visível no card ───────────────────────
         const btnDesktop = h("div", { class: "patient-actions" }, [
-          // WhatsApp — ícone verde discreto
           waNum ? h("a", {
             class: "btn pac-btn pac-btn-wa-main",
             href: `https://wa.me/${waNum}?text=${waMsg}`,
@@ -2068,52 +2067,6 @@ async function pacientesPage() {
             "aria-label": `WhatsApp para ${p.nome_completo}`,
             onclick: (e) => e.stopPropagation(),
           }, ["💬"]) : null,
-          // Menu ⋯ com todas as opções
-          (() => {
-            let mOpen = false;
-            const mDrop = h("div", { class: "dropdown-menu pac-dropdown", style: "display:none" }, [
-              h("a", {
-                class: "dropdown-item",
-                href: `#/paciente?id=${encodeURIComponent(p.id)}`,
-                onclick: (e) => e.stopPropagation(),
-              }, ["📋 Ver histórico"]),
-              h("button", {
-                class: "dropdown-item",
-                onclick: () => { mDrop.style.display = "none"; mOpen = false; openEdit(p); },
-              }, ["✏️ Editar dados"]),
-              waNum ? h("a", {
-                class: "dropdown-item",
-                href: `https://wa.me/${waNum}?text=${waMsg}`,
-                target: "_blank",
-                rel: "noopener",
-                onclick: (e) => e.stopPropagation(),
-              }, ["💬 WhatsApp"]) : null,
-              h("a", {
-                class: "dropdown-item",
-                href: `/api/patients/${p.id}/history/pdf`,
-                target: "_blank",
-                onclick: (e) => e.stopPropagation(),
-              }, ["📄 Exportar PDF"]),
-              h("button", {
-                class: "dropdown-item danger-item",
-                onclick: () => { mDrop.style.display = "none"; mOpen = false; doDelete(p); },
-              }, ["🗑️ Excluir"]),
-            ]);
-            const btnMenu = h("button", {
-              class: "btn pac-btn",
-              title: "Mais opções",
-              "aria-label": "Mais opções",
-              onclick: (e) => {
-                e.preventDefault(); e.stopPropagation();
-                mOpen = !mOpen;
-                mDrop.style.display = mOpen ? "block" : "none";
-              },
-            }, ["•••"]);
-            document.addEventListener("click", () => {
-              if (mOpen) { mOpen = false; mDrop.style.display = "none"; }
-            });
-            return h("div", { class: "dropdown-wrap" }, [btnMenu, mDrop]);
-          })(),
         ]);
 
         return h("a", {

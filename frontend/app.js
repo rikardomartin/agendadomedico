@@ -2056,79 +2056,84 @@ async function pacientesPage() {
         );
 
         // ── Botões desktop (visíveis direto na linha) ──────────────────────
-        const btnDesktop = h("div", { class: "patient-actions-desktop" }, [
+        // ── Botões de ação diretos (mobile-first) ─────────────────────
+        const btnDesktop = h("div", { class: "patient-actions" }, [
+          // WhatsApp — destaque visual
+          waNum ? h("a", {
+            class: "btn pac-btn pac-btn-wa pac-btn-wa-main",
+            href: `https://wa.me/${waNum}?text=${waMsg}`,
+            target: "_blank",
+            rel: "noopener",
+            title: "Enviar WhatsApp",
+            "aria-label": `WhatsApp para ${p.nome_completo}`,
+            onclick: (e) => e.stopPropagation(),
+          }, ["💬 WhatsApp"]) : null,
+          // Histórico
           h("a", {
             class: "btn pac-btn",
             href: `#/paciente?id=${encodeURIComponent(p.id)}`,
             title: "Ver histórico",
+            "aria-label": "Ver histórico",
             onclick: (e) => e.stopPropagation(),
           }, ["📋"]),
+          // Editar
           h("button", {
             class: "btn pac-btn",
             title: "Editar dados",
+            "aria-label": "Editar dados",
             onclick: (e) => { e.preventDefault(); e.stopPropagation(); openEdit(p); },
           }, ["✏️"]),
-          h("a", {
-            class: "btn pac-btn pac-btn-wa",
-            href: `https://wa.me/${waNum}?text=${waMsg}`,
-            target: "_blank",
-            rel: "noopener",
-            title: "WhatsApp",
-            onclick: (e) => e.stopPropagation(),
-          }, ["💬"]),
-          h("button", {
-            class: "btn pac-btn pac-btn-danger",
-            title: "Excluir",
-            onclick: (e) => { e.preventDefault(); e.stopPropagation(); doDelete(p); },
-          }, ["🗑️"]),
+          // Menu ⋯ com ferramentas extras
+          (() => {
+            let mOpen = false;
+            const mDrop = h("div", { class: "dropdown-menu pac-dropdown", style: "display:none" }, [
+              h("a", {
+                class: "dropdown-item",
+                href: `#/paciente?id=${encodeURIComponent(p.id)}`,
+              }, ["📋 Ver histórico"]),
+              h("button", {
+                class: "dropdown-item",
+                onclick: () => { mDrop.style.display = "none"; mOpen = false; openEdit(p); },
+              }, ["✏️ Editar dados"]),
+              waNum ? h("a", {
+                class: "dropdown-item",
+                href: `https://wa.me/${waNum}?text=${waMsg}`,
+                target: "_blank",
+                rel: "noopener",
+              }, ["💬 WhatsApp"]) : null,
+              h("a", {
+                class: "dropdown-item",
+                href: `/api/patients/${p.id}/history/pdf`,
+                target: "_blank",
+              }, ["📄 Exportar PDF"]),
+              h("button", {
+                class: "dropdown-item danger-item",
+                onclick: () => { mDrop.style.display = "none"; mOpen = false; doDelete(p); },
+              }, ["🗑️ Excluir"]),
+            ]);
+            const btnMenu = h("button", {
+              class: "btn pac-btn",
+              title: "Mais opções",
+              "aria-label": "Mais opções",
+              onclick: (e) => {
+                e.preventDefault(); e.stopPropagation();
+                mOpen = !mOpen;
+                mDrop.style.display = mOpen ? "block" : "none";
+              },
+            }, ["⚙️"]);
+            document.addEventListener("click", () => {
+              if (mOpen) { mOpen = false; mDrop.style.display = "none"; }
+            });
+            return h("div", { class: "dropdown-wrap" }, [btnMenu, mDrop]);
+          })(),
         ]);
-
-        // ── Menu mobile (•••) ──────────────────────────────────────────────
-        let mOpen = false;
-        const mDrop = h("div", { class: "dropdown-menu", style: "display:none" }, [
-          h("a", {
-            class: "dropdown-item",
-            href: `#/paciente?id=${encodeURIComponent(p.id)}`,
-          }, ["📋 Ver histórico"]),
-          h("button", {
-            class: "dropdown-item",
-            onclick: () => { mDrop.style.display = "none"; mOpen = false; openEdit(p); },
-          }, ["✏️ Editar dados"]),
-          h("a", {
-            class: "dropdown-item",
-            href: `https://wa.me/${waNum}?text=${waMsg}`,
-            target: "_blank",
-            rel: "noopener",
-          }, ["💬 WhatsApp"]),
-          h("button", {
-            class: "dropdown-item danger-item",
-            onclick: () => { mDrop.style.display = "none"; mOpen = false; doDelete(p); },
-          }, ["🗑️ Excluir"]),
-        ]);
-
-        const btnMobile = h("div", { class: "patient-actions-mobile dropdown-wrap" }, [
-          h("button", {
-            class: "btn patient-action-btn",
-            onclick: (e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              mOpen = !mOpen;
-              mDrop.style.display = mOpen ? "block" : "none";
-            },
-          }, ["•••"]),
-          mDrop,
-        ]);
-
-        document.addEventListener("click", () => {
-          if (mOpen) { mOpen = false; mDrop.style.display = "none"; }
-        });
 
         return h("a", {
           class: "patient-row",
           href: `#/paciente?id=${encodeURIComponent(p.id)}`,
           onclick: (e) => {
-            if (e.target.closest(".patient-actions-desktop") ||
-                e.target.closest(".patient-actions-mobile")) {
+            if (e.target.closest(".patient-actions") ||
+                e.target.closest(".dropdown-wrap")) {
               e.preventDefault();
             }
           },
@@ -2142,7 +2147,6 @@ async function pacientesPage() {
             h("div", { class: "patient-tel" }, [p.telefone]),
           ]),
           btnDesktop,
-          btnMobile,
         ]);
       }));
       list.append(tbl);

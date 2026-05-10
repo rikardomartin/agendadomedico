@@ -2056,34 +2056,38 @@ async function pacientesPage() {
         );
 
         // ── Botões desktop (visíveis direto na linha) ──────────────────────
-        // ── Botões de ação diretos (mobile-first) ─────────────────────
+        // ── Botões de ação diretos ─────────────────────────────────────
         const btnDesktop = h("div", { class: "patient-actions" }, [
-          // WhatsApp — sempre visível e destacado
+          // WhatsApp — ícone verde discreto
           waNum ? h("a", {
-            class: "btn pac-btn pac-btn-wa pac-btn-wa-main",
+            class: "btn pac-btn pac-btn-wa-main",
             href: `https://wa.me/${waNum}?text=${waMsg}`,
             target: "_blank",
             rel: "noopener",
-            title: "Enviar WhatsApp",
+            title: "WhatsApp",
             "aria-label": `WhatsApp para ${p.nome_completo}`,
             onclick: (e) => e.stopPropagation(),
           }, ["💬"]) : null,
-          // Histórico — sempre visível
-          h("a", {
-            class: "btn pac-btn",
-            href: `#/paciente?id=${encodeURIComponent(p.id)}`,
-            title: "Ver histórico",
-            "aria-label": "Ver histórico",
-            onclick: (e) => e.stopPropagation(),
-          }, ["📋"]),
-          // Menu ⚙️ com ferramentas extras (Editar, PDF, Excluir)
+          // Menu ⋯ com todas as opções
           (() => {
             let mOpen = false;
             const mDrop = h("div", { class: "dropdown-menu pac-dropdown", style: "display:none" }, [
+              h("a", {
+                class: "dropdown-item",
+                href: `#/paciente?id=${encodeURIComponent(p.id)}`,
+                onclick: (e) => e.stopPropagation(),
+              }, ["📋 Ver histórico"]),
               h("button", {
                 class: "dropdown-item",
                 onclick: () => { mDrop.style.display = "none"; mOpen = false; openEdit(p); },
               }, ["✏️ Editar dados"]),
+              waNum ? h("a", {
+                class: "dropdown-item",
+                href: `https://wa.me/${waNum}?text=${waMsg}`,
+                target: "_blank",
+                rel: "noopener",
+                onclick: (e) => e.stopPropagation(),
+              }, ["💬 WhatsApp"]) : null,
               h("a", {
                 class: "dropdown-item",
                 href: `/api/patients/${p.id}/history/pdf`,
@@ -2104,7 +2108,7 @@ async function pacientesPage() {
                 mOpen = !mOpen;
                 mDrop.style.display = mOpen ? "block" : "none";
               },
-            }, ["⚙️"]);
+            }, ["•••"]);
             document.addEventListener("click", () => {
               if (mOpen) { mOpen = false; mDrop.style.display = "none"; }
             });

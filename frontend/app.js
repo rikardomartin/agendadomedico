@@ -2058,7 +2058,7 @@ async function pacientesPage() {
         // ── Botões desktop (visíveis direto na linha) ──────────────────────
         // ── Botões de ação diretos (mobile-first) ─────────────────────
         const btnDesktop = h("div", { class: "patient-actions" }, [
-          // WhatsApp — destaque visual
+          // WhatsApp — sempre visível e destacado
           waNum ? h("a", {
             class: "btn pac-btn pac-btn-wa pac-btn-wa-main",
             href: `https://wa.me/${waNum}?text=${waMsg}`,
@@ -2067,8 +2067,8 @@ async function pacientesPage() {
             title: "Enviar WhatsApp",
             "aria-label": `WhatsApp para ${p.nome_completo}`,
             onclick: (e) => e.stopPropagation(),
-          }, ["💬 WhatsApp"]) : null,
-          // Histórico
+          }, ["💬"]) : null,
+          // Histórico — sempre visível
           h("a", {
             class: "btn pac-btn",
             href: `#/paciente?id=${encodeURIComponent(p.id)}`,
@@ -2076,35 +2076,19 @@ async function pacientesPage() {
             "aria-label": "Ver histórico",
             onclick: (e) => e.stopPropagation(),
           }, ["📋"]),
-          // Editar
-          h("button", {
-            class: "btn pac-btn",
-            title: "Editar dados",
-            "aria-label": "Editar dados",
-            onclick: (e) => { e.preventDefault(); e.stopPropagation(); openEdit(p); },
-          }, ["✏️"]),
-          // Menu ⋯ com ferramentas extras
+          // Menu ⚙️ com ferramentas extras (Editar, PDF, Excluir)
           (() => {
             let mOpen = false;
             const mDrop = h("div", { class: "dropdown-menu pac-dropdown", style: "display:none" }, [
-              h("a", {
-                class: "dropdown-item",
-                href: `#/paciente?id=${encodeURIComponent(p.id)}`,
-              }, ["📋 Ver histórico"]),
               h("button", {
                 class: "dropdown-item",
                 onclick: () => { mDrop.style.display = "none"; mOpen = false; openEdit(p); },
               }, ["✏️ Editar dados"]),
-              waNum ? h("a", {
-                class: "dropdown-item",
-                href: `https://wa.me/${waNum}?text=${waMsg}`,
-                target: "_blank",
-                rel: "noopener",
-              }, ["💬 WhatsApp"]) : null,
               h("a", {
                 class: "dropdown-item",
                 href: `/api/patients/${p.id}/history/pdf`,
                 target: "_blank",
+                onclick: (e) => e.stopPropagation(),
               }, ["📄 Exportar PDF"]),
               h("button", {
                 class: "dropdown-item danger-item",

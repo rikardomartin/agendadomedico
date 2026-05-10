@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     # Resend API (alternativa ao SMTP para produção em cloud)
     resend_api_key: str = Field(default="", alias="RESEND_API_KEY")
 
+    # WhatsApp Business API (Meta Cloud API)
+    whatsapp_token: str = Field(default="", alias="WHATSAPP_TOKEN")
+    whatsapp_phone_id: str = Field(default="", alias="WHATSAPP_PHONE_ID")
+
 
 @lru_cache
 def get_settings() -> Settings:

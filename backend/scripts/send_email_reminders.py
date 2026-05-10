@@ -273,6 +273,51 @@ async def _processar(dias_antes: int) -> dict:
             except Exception as exc:
                 print(f"    [PUSH MÉDICO] erro: {exc}")
 
+            # ── WhatsApp para cada PACIENTE ─────────────────────────────────
+            try:
+                from backend.app.services.whatsapp import send_whatsapp_lembrete
+                from backend.app.models.patient import Paciente as PacienteModel
+                wa_ok = 0
+                wa_skip = 0
+                for c in consultas:
+                    pac = db.get(PacienteModel, c.paciente_id)
+                    if not pac or not pac.telefone:
+                        wa_skip += 1
+                        continue
+                    # Verifica se já enviou WhatsApp para esta consulta
+                    if _ja_enviado(db, c.id, canal="whatsapp"):
+                        wa_skip += 1
+                        continue
+                    hora_c = c.inicio.astimezone(TZ).strftime("%H:%M")
+                    data_c = c.inicio.astimezone(TZ).strftime("%d/%m/%Y")
+                    sent = await send_whatsapp_lembrete(
+                        telefone=pac.telefone,
+                        paciente_nome=pac.nome_completo,
+                        data_str=data_c,
+                        hora_str=hora_c,
+                        clinica=clinic_name,
+                    )
+                    if sent:
+                        # Registra lembrete enviado
+                        from backend.app.models.reminder import Lembrete
+                        db.add(Lembrete(
+                            id=uuid.uuid4(),
+                            consulta_id=c.id,
+                            canal="whatsapp",
+                            agendado_para=datetime.now(TZ),
+                            status="enviado",
+                            enviado_em=datetime.now(TZ),
+                            payload={"telefone": pac.telefone},
+                        ))
+                        wa_ok += 1
+                    else:
+                        wa_skip += 1
+                if wa_ok:
+                    print(f"    [WHATSAPP] {wa_ok} enviado(s), {wa_skip} pulado(s)")
+                db.commit()
+            except Exception as exc:
+                print(f"    [WHATSAPP] erro: {exc}")
+
             db.commit()
 
     return stats
